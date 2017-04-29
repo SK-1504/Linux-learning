@@ -1,0 +1,110 @@
+* Installation /Configuration of Ansible
+  + To install ansible we need to add epel repository.
+#+BEGIN_SRC 
+    # rpm -ivh http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+#+END_SRC
+
+  + Start installing ansible using yum.
+#+BEGIN_SRC 
+    # yum install ansible -y
+#+END_SRC
+
+  + Now add remote hosts information in /etc/ansible/hosts file, to determine which host to connect.
+#+BEGIN_SRC 
+# vim /etc/ansible/hosts 	
+// Create heading [web] and add hostname or IP address of the host under [web]
+[web]
+10.0.0.41 
+#+END_SRC 
+
+  + Now run basic command to ping all the host that are present in /etc/ansible/hosts file.
+#+BEGIN_SRC 
+# ansible all -m ping (This command will ping all the host present in /etc/hosts file)
+
+Result:
+10.0.0.41 | UNREACHABLE! => {
+    "changed": false, 
+    "msg": "Failed to connect to the host via ssh.", 
+    "unreachable": true
+}
+  
+#+END_SRC
+
+  + The above command will fail, because ansible does ssh into the hosts. Which requires the password.
+  + To resolve this run following command, this will ask for the password every time you want to run ansible commands
+#+BEGIN_SRC 
+# ansible all -m ping  --ask-pass
+
+Result:
+SSH password: (type password for root @10.0.0.41)
+10.0.0.41 | SUCCESS => {
+    "changed": false, 
+    "ping": "pong"
+}
+#+END_SRC
+
+  + Other way around we can login into remote host using key-based SSH login. Key based authentication is more secured than the password based authentication. In key based authentication message will be locked by public key and can be unlocked by its private key.
+  + To generate public ssh-key using following commands:
+#+BEGIN_SRC 
+# ssh-keygen 
+
+Result: 
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa):[Press enter key]
+Enter passphrase (empty for no passphrase): [Press enter key]
+Enter same passphrase again: [Pess enter key]
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+15:5b:ff:3b:e1:2c:a0:40:b3:38:8d:31:c2:d1:37:6b root@server
+The key's randomart image is:
++--[ RSA 2048]----+
+|   ..     . .    |
+|  . .. o   + .   |
+|   o o.oo o   .  |
+|    . BEo.     . |
+|     +.+S  .   ..|
+|      . . . . o o|
+|         .   . = |
+|              . .|
+|                 |
++-----------------+ 
+#+END_SRC
+
+  + The public ssh-key has been generated
+
+  + Copy this public ssh-key on remote host, that they can use this public key to lock the message. And the private key on server side can unlock the message.
+#+BEGIN_SRC 
+#  ssh-copy-id -i ~/.ssh/id_rsa.pub 10.0.0.41
+
+Result:
+"ssh-copy-id -i ~/.ssh/id_rsa.pub (host IP)" command will copy the ssh key to establish remote connection. 	(Output after running ssh-copy-id)
+The authenticity of host '10.0.0.41 (10.0.0.41)' can't be established.
+RSA key fingerprint is 7e:b5:e5:63:50:a1:d7:39:5d:b5:ee:ce:6e:dc:a8:e3.
+Are you sure you want to continue connecting (yes/no)? yes
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+root@10.0.0.41's password: (Enter the password of root user of host 10.0.0.41)
+
+Number of key(s) added: 1
+#+END_SRC
+
+  + Try to login into machine 10.0.0.41 using "ssh root@10.0.0.41" you will not be prompted for a password:
+#+BEGIN_SRC 
+# ssh root@10.0.0.41
+
+Result:
+[root@master ~]# ( we are logged in into 10.0.0.41)
+#+END_SRC
+
+  + Again run following command to ping all the host you are able to ping all the host without any error
+#+BEGIN_SRC 
+# ansible all -m ping
+
+Result:  
+10.0.0.41 | SUCCESS => {
+    "changed": false, 
+    "ping": "pong"
+}
+#+END_SRC
+
