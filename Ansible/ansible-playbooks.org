@@ -1,0 +1,335 @@
+* Ansible Playbooks
+  =Ansible playbook always start with "---" and saved with ".yaml"  extension (yaml->yet another markup language).=
+#+BEGIN_SRC 
+
+Syntax:
+---
+- hosts: (hostname or IP address of the remote machine)
+  remote_user: (user account through which u want to login)
+  tasks: 
+  //configurations to be done on host
+   - name: 	// At the time of execution the 'name' is used to identify that which task has been executed or in process.
+Eg: 
+---
+- hosts: 10.0.0.41
+  remote_user: root
+  tasks:
+  - name: ping 10.0.0.41 	
+    ping:  	// This will ping all the host present in /etc/ansible/hosts file, for now we have defined only 			   10.0.0.41. So it will ping only 10.0.0.41 
+(The above example will ping 10.0.0.41 host)
+#+END_SRC
+
+=To run ansible playbook=
+#+BEGIN_SRC 
+# ansible-playbook (.yaml file u want to run) 
+Eg: ansible-playbook play1.yaml
+#+END_SRC
+
+* How to manage packages
+=YUM module is used to install, delete & update packages.=
+
+#+BEGIN_SRC 
+Syntax: 
+---
+ - hosts: (IP or hostname) 
+   remote_user: (user account u want to login ) 
+   tasks: 
+   - name: 
+     yum: name=<package name> state=< present, installed, latest, absent, removed>  
+To install we can use (present or installed, latest), or  to remove we can use (absent or removed) a package.
+#+END_SRC
+
+** Examples:
+=Playbook to install package using state as present=
+
+#+BEGIN_SRC 
+tasks:
+    - name: Install apache
+      yum: name=httpd state=present  
+#+END_SRC
+
+=Playbook to delete package using state as absent=
+#+BEGIN_SRC 
+tasks:	
+    - name: Delete apache
+      yum: name=httpd state=absent
+
+#+END_SRC
+
+=Playbook to update all the package using state as latest=
+#+BEGIN_SRC 
+tasks:
+    - name: update packages
+      yum: name=* state=latest
+#+END_SRC
+
+=Playbook to install list of packages using state as installed=
+#+BEGIN_SRC 
+tasks:
+    - name: Install multiple package 
+      yum: name={{item}} state=installed  // To  install number of package simultaneously we can use 'item and with_item' arguments.
+       with_items:
+		-httpd
+		-openssh-server
+#+END_SRC
+
+=Playbook to remove list of packages using state as removed=
+#+BEGIN_SRC 
+tasks:
+    - name: Remove multiple package 
+      yum: name={{item}} state=removed
+       with_items:
+		-httpd
+		-openssh-server
+#+END_SRC
+
+* How to Manage Services:
+
+=To control services on remote hosts we use service module=
+#+BEGIN_SRC 
+Syntax: 
+---
+ - hosts: (IP or hostname) 
+   remote_user: (user account u want to login ) 
+   tasks: 
+   - name: Services 
+     service: name=<name of the service> state=< started, stopped, restarted>  // To change the state of services   
+                                                           OR
+     service: name=<name of the service> enabled=< yes or no>  // To change the service state on boot 
+
+#+END_SRC
+
+** Examples:
+=Playbook to start the service=
+#+BEGIN_SRC 
+tasks:
+    - name: Start apache service
+      service: name=httpd state=started
+#+END_SRC
+
+=Playbook to stop the service=
+#+BEGIN_SRC 
+tasks:
+    - name: Stop apache service
+      service: name=httpd state=stopped
+#+END_SRC
+
+=Playbook to restart the service=
+#+BEGIN_SRC 
+tasks:
+    - name: Stop apache service
+      service: name=httpd state=stopped
+#+END_SRC
+
+=Playbook to start the service on boot=
+#+BEGIN_SRC 
+tasks:
+    - name: Start apache service
+      service: name=httpd enabled=yes
+#+END_SRC
+
+=Playbook to disable the service on boot=
+#+BEGIN_SRC 
+tasks:
+    - name: Start apache service
+      service: name=httpd enabled=no
+#+END_SRC
+
+* How to manage user and groups 
+
+=To manage user accounts, user attributes and presence of groups on a host user and group module is used.=
+#+BEGIN_SRC 
+Syntax: 
+---
+ - hosts: (IP or hostname) 
+   remote_user: (user account u want to login ) 
+   tasks: 
+   - user: name=<name of the user> // And different parameters of user module are explained below 
+   - group: name=<name of the group> // Different parameters of group module are explained below 
+
+#+END_SRC
+
+** Example for user module:
+
+=Playbook to create user=
+#+BEGIN_SRC 
+tasks:
+    - user: name=justin state=present 
+//"state" parameter is used to create or delete a user. If "state=present" then user will be created and if "state=absent" then user will be removedor deleted"
+
+#+END_SRC
+
+=Playbook to delete user=
+#+BEGIN_SRC 
+tasks:
+    - user: name=justin state=absent
+#+END_SRC 
+
+=Playbook to add a user into a group=
+#+BEGIN_SRC 
+tasks:
+    - user: name=justin group=root 
+//"group" parameter takes a group name and sets the user's primary group.
+#+END_SRC
+
+=Playbook to add a user into multiple groups=
+#+BEGIN_SRC 
+tasks:
+    - user: name=justin group=root,centos 
+#+END_SRC
+
+** Examples of group module
+=Playbook to add a group=
+
+#+BEGIN_SRC 
+tasks:
+    - group: name=tom  state=present 
+//"state=present" this will create a group.
+
+#+END_SRC
+
+=Playbook to remove a group=
+
+#+BEGIN_SRC 
+tasks:
+    - group: name=tom  state=absent 
+//"state=present" this will remove a group.
+#+END_SRC
+
+* How to manage file and directories:
+
+=File module is used to set attributes of files, symlinks, and directories, or removes files/symlinks/directories.=
+
+#+BEGIN_SRC 
+Syntax: 
+---
+ - hosts: (IP or hostname) 
+   remote_user: (user account u want to login ) 
+   tasks: 
+   - name: File modlue 
+     file:  //And different parameters are explained below
+#+END_SRC
+
+=Playbook to create  a file=
+
+#+BEGIN_SRC 
+tasks:
+   - name: To create a file
+     file:  path=/root/documents/p1 state=touch 
+//"state=touch" will create a file p1 in /root/documents which is specified by the "path" parameter.
+#+END_SRC
+
+=Playbook to delete a file=
+#+BEGIN_SRC 
+tasks:
+   - name: To delete a file
+     file:  path=/root/documents/p1 
+//"state=absent" will delete a file p1 from /root/document
+
+#+END_SRC
+
+=Playbook to set the mode of the file=
+#+BEGIN_SRC 
+tasks:
+   - name: To change the mode of the file
+     file:  path=/root/documents/p1 mode=0777  
+"mode=" will change the mode of the file to any mode, different modes are described below.
+Different modes: 
+700 ->  Owner of this file may read, write and execute this file.
+777 -> Owner, group and user may read, write and execute this file.
+755 -> Owner may read, write and execute the file but group and user can only read and execute the file
+666 ->   Owner, group and user can read and write a file but cannot execute it.
+644 -> Owner can read and write a file but group and user may only read a file .
+600 -> Owner can read and write a file but group and user have no access to a file. 
+#+END_SRC
+
+=Playbook to set the group of the file=
+#+BEGIN_SRC 
+tasks:
+   - name: Assign a group to a file 
+     file:  path=/root/documents/p1 group=tom  
+//"group=tom" the file p1 become the member of tom group.
+#+END_SRC
+
+=Playbook to set the owner of the file=
+
+#+BEGIN_SRC 
+tasks:
+   - name: To change the ownership of the file
+     file:  path=/root/documents/p1 owner=justin
+// "owner=justin" justin will be the owner of the file p1.
+#+END_SRC
+
+=Playbook to create a symlink of a file=
+
+#+BEGIN_SRC 
+tasks:
+   - name: create symlink
+     file: src=/etc/ansible/f1 dest=/etc/ansible/f12 state=link
+//"state=link" will create a symlink "f12" of file "f1".
+//"src" defines the path of the file whose symlink we want to create.
+//"dest" defines the path where the symlink will be created.
+#+END_SRC
+
+=Playbook to create  a directory=
+
+#+BEGIN_SRC 
+tasks:
+   - name: To create a directory
+     file:  path=/root/documents/ansible state=directory 
+//"state=directory" will create a directory ansible in specified path /root/documents.
+#+END_SRC
+
+=Playbook to delete a directory=
+
+#+BEGIN_SRC 
+tasks:
+   - name: To  delete a directory
+     file:  path=/root/documents/ansible state=absent 
+//"state=absent" will delete ansible directory form /root/documents
+#+END_SRC
+
+=Playbook to set the mode of the directory=
+
+#+BEGIN_SRC 
+tasks:
+   - name: To change the mode of the directory
+     file:  path=/root/documents/ansible mode=0774 
+//"mode=" will change the mode of the directory.
+
+#+END_SRC
+
+=Playbook to set the group of the directory=
+
+#+BEGIN_SRC 
+tasks:
+   - name: To change the group of the directory
+     file:  path=/root/documents/ansible group=root
+//"group=root" ansible directory becomes the member of root group.
+#+END_SRC
+
+=Playbook to set the owner of the directory=
+
+#+BEGIN_SRC 
+tasks:
+   - name: To change the owner of the directory
+     file:  path=/root/documents/ansible owner=root  
+//"owner=root" root will be the owner of the directory.
+#+END_SRC
+
+* To copy a file:
+=If we want to copy a file from local machine to any remote machine then we will use copy module.=
+
+#+BEGIN_SRC 
+tasks:
+    - copy: src=/root/k1 dest=/root/Documents
+#+END_SRC
+
+* To fetch a file
+
+=To copy a file from any remote machine to a local machine we will use fetch module.=
+
+#+BEGIN_SRC 
+tasks:
+    - fetch: src=/root/p1 dest=/root/Documents
+#+END_SRC
